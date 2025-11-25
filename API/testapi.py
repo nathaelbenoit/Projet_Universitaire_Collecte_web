@@ -1,6 +1,7 @@
 #%%
 import requests
 from datetime import datetime, timedelta
+import csv
 
 url_base = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/donnees-synop-essentielles-omm/records"
 
@@ -40,8 +41,8 @@ def fetch_data_between_dates(start_date, end_date):
     return results
 
 # Exemple d’ajustement dynamique de la plage temporelle
-start_date_obj = datetime(2024, 1, 1)
-end_total_obj = datetime(2024, 12, 31)
+start_date_obj = datetime(2025, 1, 1)
+end_total_obj = datetime(2025, 1, 31)
 max_records = 10000
 current_start = start_date_obj
 
@@ -72,5 +73,12 @@ while current_start < end_total_obj:
         current_start += timedelta(days=1)
 
 print(f"Récupération totale d'enregistrements: {len(all_data)}")
+
+with open("data.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(all_data)
+
+
+
 
 # %%
