@@ -1,7 +1,7 @@
 #%%
 import requests
 from datetime import datetime, timedelta
-import csv
+import pandas as pd
 
 url_base = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/donnees-synop-essentielles-omm/records"
 
@@ -74,11 +74,19 @@ while current_start < end_total_obj:
 
 print(f"Récupération totale d'enregistrements: {len(all_data)}")
 
-with open("data.csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(all_data)
 
+# %%
 
+# Conversion en DataFrame pandas
+df = pd.json_normalize(all_data)
 
+# Supprimer les colonnes vides (100% de valeurs manquantes)
+df_clean = df.dropna(axis=1, how='all')
 
+# Renommer les colonnes avec le dictionnaire
+df_clean.rename(columns=renomer_colonnes, inplace=True)
+
+# Export en CSV propre
+df_clean.to_csv("dataFinal.csv", index=False, encoding='utf-8-sig')
+print(f"\nDonnées exportées dans 'dataFinal.csv' ({len(df_clean)} lignes, {len(df_clean.columns)} colonnes)")
 # %%
