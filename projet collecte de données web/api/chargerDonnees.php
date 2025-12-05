@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($date_debut && $date_fin) {
         $commande = sprintf(
             'python "%s" "%s" "%s"',
-            __DIR__ . '/API.py',
+            __DIR__ . '/../scripts/API.py',
             $date_debut,
             $date_fin
         );

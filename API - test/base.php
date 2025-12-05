@@ -4,7 +4,10 @@
  * Génère 4 indicateurs visuels à partir des données collectées
  */
 
-// Fonction pour charger et traiter les données CSV
+// Augmenter la limite de mémoire pour les gros fichiers
+ini_set('memory_limit', '512M');
+
+// Fonction pour charger et traiter les données CSV avec limite d'échantillonnage
 function loadAndProcessData() {
     $csvFile = __DIR__ . '/dataFinal.csv';
     
@@ -111,6 +114,38 @@ $data = $processedData['data'];
             font-size: 1.1em;
         }
         
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-buttons a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1E90FF 0%, #4169E1 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(30, 144, 255, 0.3);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .nav-buttons a:hover {
+            background: linear-gradient(135deg, #4169E1 0%, #1E90FF 100%);
+            box-shadow: 0 6px 12px rgba(30, 144, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .nav-buttons a:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(30, 144, 255, 0.3);
+        }
+        
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
@@ -214,15 +249,6 @@ $data = $processedData['data'];
             margin-top: 30px;
         }
         
-        .info-panel {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-
         @media (max-width: 1200px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -234,12 +260,16 @@ $data = $processedData['data'];
     <div class="container">
         <header>
             <h1>🌤️ Dashboard Météorologique</h1>
-            <p>Analyse complète des données de stations météorologiques françaises</p>
+            <p>Projet universitaire collecte de données web - Analyse complète des données de stations météorologiques françaises </p>
+            <div class="nav-buttons">
+                <a href="#api">API</a>
+                <a href="./web_scraping.php#web">Web Scraping</a>
+            </div>
         </header>
 
         <!-- Zone de sélection de période -->
-        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 30px;">
-            <h3 style="color: #1E90FF; margin-bottom: 15px;">📅 Sélectionner une période</h3>
+        <div id="api" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 30px;">
+            <h3 style="color: #1E90FF; margin-bottom: 15px;">📅 Sélectionner une période | période de 4 mois maximum</h3>
             <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div>
                     <label for="datéDebut" style="display: block; margin-bottom: 5px; font-weight: bold;">Date de début :</label>
@@ -263,11 +293,13 @@ $data = $processedData['data'];
             <!-- Indicateur 1: Carte Folium Interactive -->
             <div class="card full-width">
                 <div class="card-header">
-                    📍 Indicateur 1 : Carte Interactive - Température Moyenne par Commune
+                    🌏 Carte Interactive - Température Moyenne aux Stations
                 </div>
-                <div class="info-panel" style="margin: 20px;">
-                    <strong>Description :</strong> Affiche une carte interactive avec des marqueurs colorés représentant la température moyenne par commune. 
-                    Les couleurs varient du bleu (froid) au rouge (chaud).
+                <div style="margin: 20px; display: flex; gap: 15px; align-items: center;">
+                    <label for="moisFiltre" style="font-weight: bold;">Sélectionner un mois :</label>
+                    <select id="moisFiltre" style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; cursor: pointer;">
+                        <option value="">Tous les mois</option>
+                    </select>
                 </div>
                 <div id="map"></div>
                 <div class="temperature-legend" style="padding: 15px 20px;">
@@ -301,10 +333,7 @@ $data = $processedData['data'];
             <!-- Indicateur 2: Graphique Comparatif -->
             <div class="card">
                 <div class="card-header">
-                    📊 Indicateur 2 : Graphique Comparatif
-                </div>
-                <div class="info-panel" style="margin: 20px; margin-bottom: 10px;">
-                    <strong>Comparaison :</strong> Pluviométrie (24h) et Humidité relative (%) par région et année.
+                    🌦️ Graphique Comparatif Pluviométrie / Humidité
                 </div>
                 <div class="card-content">
                     <div class="chart-container">
@@ -316,10 +345,7 @@ $data = $processedData['data'];
             <!-- Indicateur 3: Vitesse du Vent par Région -->
             <div class="card">
                 <div class="card-header">
-                    💨 Indicateur 3 : Vitesse du Vent Moyen par Région
-                </div>
-                <div class="info-panel" style="margin: 20px; margin-bottom: 10px;">
-                    <strong>Analyse :</strong> Comparaison de la vitesse du vent moyen par région (basée sur toutes les observations).
+                    💨 Vitesse du Vent Moyen par Région
                 </div>
                 <div class="card-content">
                     <div class="chart-container">
@@ -331,10 +357,7 @@ $data = $processedData['data'];
             <!-- Indicateur 4: Température par Mois -->
             <div class="card">
                 <div class="card-header">
-                    🗓️ Indicateur 4 : Température Moyenne par Mois
-                </div>
-                <div class="info-panel" style="margin: 20px; margin-bottom: 10px;">
-                    <strong>Analyse :</strong> Évolution des températures moyennes par mois (basée sur les meilleures observations).
+                    ☀️ Température Moyenne par Mois
                 </div>
                 <div class="card-content">
                     <div class="chart-container">
@@ -343,13 +366,10 @@ $data = $processedData['data'];
                 </div>
             </div>
 
-            <!-- Indicateur 5: Température par Région -->
+            <!-- Indicateur 5: Hauteur des Nuages par Région -->
             <div class="card">
                 <div class="card-header">
-                    🌍 Indicateur 5 : Température Moyenne par Région
-                </div>
-                <div class="info-panel" style="margin: 20px; margin-bottom: 10px;">
-                    <strong>Analyse :</strong> Comparaison des températures moyennes par région (basée sur les meilleures observations).
+                    ☁️ Hauteur Base Nuages Moyenne par Région
                 </div>
                 <div class="card-content">
                     <div class="chart-container">
@@ -388,7 +408,37 @@ $data = $processedData['data'];
                             <div class="stat-label">Stations météo</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value">Janv 2025</div>
+                            <div class="stat-value"><?php 
+                                // Récupérer les dates min et max
+                                $dates = array_map(function($row) {
+                                    return isset($row['Date et heure d\'observation']) ? $row['Date et heure d\'observation'] : '';
+                                }, $data);
+                                
+                                $dates = array_filter($dates);
+                                
+                                if (!empty($dates)) {
+                                    sort($dates);
+                                    $first_date = reset($dates);
+                                    $last_date = end($dates);
+                                    
+                                    // Extraire mois et année
+                                    $first_month = substr($first_date, 5, 2);
+                                    $first_year = substr($first_date, 0, 4);
+                                    $last_month = substr($last_date, 5, 2);
+                                    $last_year = substr($last_date, 0, 4);
+                                    
+                                    // Tableau des noms de mois
+                                    $mois = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 
+                                            'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+                                    
+                                    $first_month_name = $mois[intval($first_month) - 1];
+                                    $last_month_name = $mois[intval($last_month) - 1];
+                                    
+                                    echo $first_month_name . ' ' . $first_year . ' - ' . $last_month_name . ' ' . $last_year;
+                                } else {
+                                    echo 'N/A';
+                                }
+                            ?></div>
                             <div class="stat-label">Période d'étude</div>
                         </div>
                     </div>
@@ -397,8 +447,8 @@ $data = $processedData['data'];
         </div>
 
         <footer>
-            <p>&copy; 2025 Dashboard Météorologique - Projet Universitaire de Collecte Web</p>
-            <p>Données : OpenDataSoft - Données SYNOP essentielles OMM</p>
+            <p>&copy; 2025 Dashboard Météorologique - Projet Universitaire de Collecte de Données Web</p>
+            <p>Données : OpenDataSoft - Données SYNOP | C . Camille P . Jérémi B . Nathaël</p>
         </footer>
     </div>
 
@@ -433,21 +483,36 @@ $data = $processedData['data'];
                 },
                 body: `date_debut=${encodeURIComponent(datéDebut)}&date_fin=${encodeURIComponent(datéFin)}`
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => response.text())
+            .then(text => {
                 afficherChargement(false);
-                if (data.succes) {
-                    afficherMessage('Données chargées avec succès ! La page va se rafraîchir...', 'succes');
+                try {
+                    const data = JSON.parse(text);
+                    if (data.succes) {
+                        afficherMessage('Données chargées avec succès ! La page va se rafraîchir...', 'succes');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        afficherMessage('Erreur : ' + data.message, 'erreur');
+                    }
+                } catch (e) {
+                    // En cas d'erreur JSON, actualiser la page automatiquement
+                    console.error('Erreur de parsing JSON, actualisation automatique...', e);
+                    afficherMessage('Traitement des données en cours, actualisation de la page...', 'succes');
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
-                } else {
-                    afficherMessage('Erreur : ' + data.message, 'erreur');
                 }
             })
             .catch(error => {
                 afficherChargement(false);
-                afficherMessage('Erreur de communication : ' + error.message, 'erreur');
+                console.error('Erreur de communication :', error);
+                // Actualiser automatiquement au lieu d'afficher l'erreur
+                afficherMessage('Traitement des données en cours, actualisation de la page...', 'succes');
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
             });
         });
         
@@ -479,12 +544,15 @@ $data = $processedData['data'];
         
         // Calcul des températures moyennes par commune
         const temperatureByCommune = {};
+        const temperatureByCommuneByMonth = {}; // Stocker les données par mois aussi
         
         allData.forEach(row => {
             const commune = row['Libellé géographique'] || 'Inconnu';
             const lat = parseFloat(row['Latitude']);
             const lon = parseFloat(row['Longitude']);
             const temp = parseFloat(row['Température (°C)']);
+            const dateStr = row['Date et heure d\'observation'];
+            const mois = dateStr ? dateStr.substring(5, 7) : '00';
             
             if (!isNaN(lat) && !isNaN(lon) && !isNaN(temp)) {
                 if (!temperatureByCommune[commune]) {
@@ -492,10 +560,17 @@ $data = $processedData['data'];
                         lat: lat,
                         lon: lon,
                         temps: [],
+                        tempsParMois: {},
                         region: row['Nom région']
                     };
                 }
                 temperatureByCommune[commune].temps.push(temp);
+                
+                // Stocker aussi par mois
+                if (!temperatureByCommune[commune].tempsParMois[mois]) {
+                    temperatureByCommune[commune].tempsParMois[mois] = [];
+                }
+                temperatureByCommune[commune].tempsParMois[mois].push(temp);
             }
         });
         
@@ -505,6 +580,7 @@ $data = $processedData['data'];
             const avg = data.temps.reduce((a, b) => a + b, 0) / data.temps.length;
             data.avg = avg;
         });
+        
         
         // Fonction pour obtenir la couleur en fonction de la température
         function getTemperatureColor(temp) {
@@ -524,25 +600,93 @@ $data = $processedData['data'];
             maxZoom: 19
         }).addTo(map);
         
-        // Ajouter les marqueurs
-        Object.keys(temperatureByCommune).forEach(commune => {
-            const data = temperatureByCommune[commune];
-            const color = getTemperatureColor(data.avg);
+        // Variables globales pour gérer les marqueurs
+        let markersLayer = L.layerGroup().addTo(map);
+        let selectedMonth = '';
+        
+        // Fonction pour rafraîchir la carte
+        function updateMap(mois) {
+            selectedMonth = mois;
+            markersLayer.clearLayers();
             
-            L.circleMarker([data.lat, data.lon], {
-                radius: 8,
-                fillColor: color,
-                color: '#333',
-                weight: 1,
-                opacity: 0.8,
-                fillOpacity: 0.8
-            }).bindPopup(
-                `<b>${commune}</b><br>` +
-                `Température: ${data.avg.toFixed(2)}°C<br>` +
-                `Région: ${data.region}<br>` +
-                `Observations: ${data.temps.length}`
-            ).addTo(map);
+            // Ajouter les marqueurs filtrés
+            Object.keys(temperatureByCommune).forEach(commune => {
+                const data = temperatureByCommune[commune];
+                let avg;
+                
+                if (mois === '') {
+                    // Tous les mois
+                    avg = data.avg;
+                } else {
+                    // Filtre par mois
+                    if (data.tempsParMois[mois] && data.tempsParMois[mois].length > 0) {
+                        avg = data.tempsParMois[mois].reduce((a, b) => a + b, 0) / data.tempsParMois[mois].length;
+                    } else {
+                        return; // Pas de données pour ce mois
+                    }
+                }
+                
+                const color = getTemperatureColor(avg);
+                
+                L.circleMarker([data.lat, data.lon], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#333',
+                    weight: 1,
+                    opacity: 0.8,
+                    fillOpacity: 0.8
+                }).bindPopup(
+                    `<b>${commune}</b><br>` +
+                    `Température: ${avg.toFixed(2)}°C<br>` +
+                    `Région: ${data.region}<br>` +
+                    `Observations: ${mois === '' ? data.temps.length : (data.tempsParMois[mois] ? data.tempsParMois[mois].length : 0)}`
+                ).addTo(markersLayer);
+            });
+        }
+        
+        // Charger la carte avec tous les mois au démarrage
+        updateMap('');
+        
+        // Générer dynamiquement les options des mois disponibles
+        const moisDisponibles = new Set();
+        const nomsMois = {
+            '01': 'Janvier',
+            '02': 'Février',
+            '03': 'Mars',
+            '04': 'Avril',
+            '05': 'Mai',
+            '06': 'Juin',
+            '07': 'Juillet',
+            '08': 'Août',
+            '09': 'Septembre',
+            '10': 'Octobre',
+            '11': 'Novembre',
+            '12': 'Décembre'
+        };
+        
+        // Récupérer tous les mois présents dans les données
+        Object.keys(temperatureByCommune).forEach(commune => {
+            Object.keys(temperatureByCommune[commune].tempsParMois).forEach(mois => {
+                moisDisponibles.add(mois);
+            });
         });
+        
+        // Trier les mois et ajouter les options au sélecteur
+        const moisTriés = Array.from(moisDisponibles).sort();
+        const selectMois = document.getElementById('moisFiltre');
+        
+        moisTriés.forEach(mois => {
+            const option = document.createElement('option');
+            option.value = mois;
+            option.textContent = nomsMois[mois];
+            selectMois.appendChild(option);
+        });
+        
+        // Ajouter le listener au sélecteur de mois
+        document.getElementById('moisFiltre').addEventListener('change', function() {
+            updateMap(this.value);
+        });
+        
         
         // ============================================
         // INDICATEUR 2 : GRAPHIQUE COMPARATIF
@@ -598,16 +742,16 @@ $data = $processedData['data'];
                     {
                         label: 'Pluviométrie 24h (mm)',
                         data: pluieMoyenne,
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(135, 206, 250, 0.8)',
+                        borderColor: 'rgba(135, 206, 250)',
                         borderWidth: 1,
                         yAxisID: 'y'
                     },
                     {
                         label: 'Humidité (%)',
                         data: humiditeAverage,
-                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
-                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(176, 224, 230, 0.8)',
+                        borderColor: 'rgba(176, 224, 230)',
                         borderWidth: 1,
                         yAxisID: 'y1'
                     }
@@ -716,34 +860,13 @@ $data = $processedData['data'];
                 datasets: [{
                     label: 'Vitesse du vent moyen (m/s)',
                     data: vitesseMoyenneParRégion,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(255, 206, 86, 0.8)',
-                        'rgba(153, 102, 255, 0.8)',
-                        'rgba(255, 159, 64, 0.8)',
-                        'rgba(199, 199, 199, 0.8)',
-                        'rgba(83, 102, 255, 0.8)',
-                        'rgba(255, 99, 255, 0.8)',
-                        'rgba(99, 255, 132, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(75, 192, 192)',
-                        'rgb(255, 206, 86)',
-                        'rgb(153, 102, 255)',
-                        'rgb(255, 159, 64)',
-                        'rgb(199, 199, 199)',
-                        'rgb(83, 102, 255)',
-                        'rgb(255, 99, 255)',
-                        'rgb(99, 255, 132)'
-                    ],
+                    backgroundColor: 'rgba(135, 206, 250, 0.8)',
+                    borderColor: 'rgba(135, 206, 250)',
                     borderWidth: 1
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -753,7 +876,7 @@ $data = $processedData['data'];
                     }
                 },
                 scales: {
-                    y: {
+                    x: {
                         title: {
                             display: true,
                             text: 'Vitesse du vent (m/s)'
@@ -802,8 +925,8 @@ $data = $processedData['data'];
                 datasets: [{
                     label: 'Température moyenne (°C)',
                     data: températuresMoyennesMois,
-                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(135, 206, 250, 0.8)',
+                    borderColor: 'rgba(135, 206, 250)',
                     borderWidth: 1
                 }]
             },
@@ -828,29 +951,31 @@ $data = $processedData['data'];
         });
         
         // ============================================
-        // INDICATEUR 5 : TEMPÉRATURE PAR RÉGION
+        // INDICATEUR 5 : HAUTEUR DES NUAGES PAR RÉGION
         // ============================================
         
-        const tempParRégion = {};
+        const hauteurNuagesParRégion = {};
         
-        meilleuresDonnées.forEach(row => {
+        allData.forEach(row => {
             const région = row['Nom région'] || 'Inconnu';
-            const temp = parseFloat(row['Température (°C)']) || 0;
+            const hauteur = parseFloat(row['Hauteur base nuages (m)']) || 0;
             
-            if (!tempParRégion[région]) {
-                tempParRégion[région] = [];
+            if (!isNaN(hauteur) && hauteur >= 0) {
+                if (!hauteurNuagesParRégion[région]) {
+                    hauteurNuagesParRégion[région] = [];
+                }
+                hauteurNuagesParRégion[région].push(hauteur);
             }
-            tempParRégion[région].push(temp);
         });
         
         const étiquettesRégions = [];
-        const températuresmoyennesRégions = [];
+        const hauteurMoyenneParRégion = [];
         
-        Object.keys(tempParRégion).sort().forEach(région => {
-            const temperatures = tempParRégion[région];
-            const moyenne = temperatures.reduce((a, b) => a + b, 0) / temperatures.length;
+        Object.keys(hauteurNuagesParRégion).sort().forEach(région => {
+            const hauteurs = hauteurNuagesParRégion[région];
+            const moyenne = hauteurs.length > 0 ? hauteurs.reduce((a, b) => a + b, 0) / hauteurs.length : 0;
             étiquettesRégions.push(région.substring(0, 20));
-            températuresmoyennesRégions.push(moyenne);
+            hauteurMoyenneParRégion.push(moyenne.toFixed(0));
         });
         
         const ctxRégion = document.getElementById('regionChart').getContext('2d');
@@ -859,37 +984,14 @@ $data = $processedData['data'];
             data: {
                 labels: étiquettesRégions,
                 datasets: [{
-                    label: 'Température moyenne (°C)',
-                    data: températuresmoyennesRégions,
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(75, 192, 192, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235)',
-                        'rgba(75, 192, 192)',
-                        'rgba(54, 162, 235)',
-                        'rgba(75, 192, 192)',
-                        'rgba(54, 162, 235)',
-                        'rgba(75, 192, 192)',
-                        'rgba(54, 162, 235)',
-                        'rgba(75, 192, 192)',
-                        'rgba(54, 162, 235)',
-                        'rgba(75, 192, 192)'
-                    ],
+                    label: 'Hauteur base nuages (m)',
+                    data: hauteurMoyenneParRégion,
+                    backgroundColor: 'rgba(176, 224, 230, 0.8)',
+                    borderColor: 'rgba(176, 224, 230)',
                     borderWidth: 1
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -899,11 +1001,11 @@ $data = $processedData['data'];
                     }
                 },
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Température (°C)'
+                            text: 'Hauteur (m)'
                         }
                     }
                 }
