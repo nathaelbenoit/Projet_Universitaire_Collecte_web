@@ -1,14 +1,18 @@
 <?php
 /**
  * Dashboard d'analyse météorologique
- * Page principale affichant les indicateurs visuels
+ * Génère 4 indicateurs visuels à partir des données collectées
  */
 
-// Charger les fonctions utilitaires
-require_once __DIR__ . '/functions.php';
+// Augmenter la limite de mémoire pour les gros fichiers
+ini_set('memory_limit', '512M');
 
-// Charger les données
-$processedData = loadAndProcessData();
+// Inclure les fonctions PHP
+require_once 'fonctions.php';
+
+// Charger les données (par défaut dataFinal.csv)
+$currentFile = isset($_GET['dataset']) ? sanitize_filename($_GET['dataset']) : 'dataFinal.csv';
+$processedData = loadAndProcessData($currentFile);
 $data = $processedData['data'];
 ?>
 <!DOCTYPE html>
@@ -27,8 +31,8 @@ $data = $processedData['data'];
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
-    <!-- Styles personnalisés -->
-    <link rel="stylesheet" href="../public/styles.css">
+    <!-- CSS externe -->
+    <link rel="stylesheet" href="../styles/style.css">
 </head>
 <body>
     <div class="container">
@@ -37,13 +41,15 @@ $data = $processedData['data'];
             <p>Projet universitaire collecte de données web - Analyse complète des données de stations météorologiques françaises </p>
             <div class="nav-buttons">
                 <a href="#api">API</a>
-                <a href="../index.php" style="opacity: 0.6;">Web Scraping</a>
+                <a href="./../index.php#web">Web Scraping</a>
             </div>
         </header>
-        
+
         <!-- Zone de sélection de période -->
         <div id="api" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 30px;">
-            <h3 style="color: #1E90FF; margin-bottom: 15px;">📅 Sélectionner une période | période de 4 mois maximum</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #1E90FF; margin: 0;">📅 Sélectionner une période | période de 4 mois maximum</h3>
+            </div>
             <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div>
                     <label for="datéDebut" style="display: block; margin-bottom: 5px; font-weight: bold;">Date de début :</label>
@@ -57,8 +63,11 @@ $data = $processedData['data'];
                     ⬆️ Charger les données
                 </button>
                 <div id="indicateurChargement" style="display: none; color: #666;">
-                    <span>⏳ Chargement en cours...</span>
+                    <span>⏳ Chargement en cours... Cela peut prendre quelques minutes...</span>
                 </div>
+                <button id="boutonDataset" style="padding: 8px 24px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.95em; white-space: nowrap; transition: all 0.3s ease;" title="Basculer vers Poitiers ou France entière">
+                    🗺️ Voir Poitiers (100km)
+                </button>
             </div>
             <div id="messageRésultat" style="margin-top: 15px; padding: 12px; border-radius: 5px; display: none; font-weight: bold;"></div>
         </div>
@@ -212,12 +221,7 @@ $data = $processedData['data'];
                                     $first_month_name = $mois[intval($first_month) - 1];
                                     $last_month_name = $mois[intval($last_month) - 1];
                                     
-                                    // Si même mois et même année, afficher qu'une seule fois
-                                    if ($first_month == $last_month && $first_year == $last_year) {
-                                        echo $first_month_name . ' ' . $first_year;
-                                    } else {
-                                        echo $first_month_name . ' ' . $first_year . ' - ' . $last_month_name . ' ' . $last_year;
-                                    }
+                                    echo $first_month_name . ' ' . $first_year . ' - ' . $last_month_name . ' ' . $last_year;
                                 } else {
                                     echo 'N/A';
                                 }
@@ -238,18 +242,13 @@ $data = $processedData['data'];
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- Scripts personnalisés -->
-    <script src="script.js"></script>
-    
     <script>
-        // Initialiser les données et afficher les graphiques
-        const allData = <?php echo json_encode($data); ?>;
-        
-        // Initialiser la carte une fois que le DOM est chargé
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMap(allData);
-            initializeCharts(allData);
-        });
+        // Variables PHP vers JavaScript
+        const CURRENT_DATASET = '<?php echo $currentFile; ?>';
+        const ALL_DATA = <?php echo json_encode($data); ?>;
     </script>
+    
+    <!-- Script externe -->
+    <script src="../scripts/script.js"></script>
 </body>
 </html>
