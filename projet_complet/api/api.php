@@ -8,7 +8,7 @@
 ini_set('memory_limit', '512M');
 
 // Inclure les fonctions PHP
-require_once 'fonctions.php';
+require_once './fonctions.php';
 
 // Charger les données (par défaut dataFinal.csv)
 $currentFile = isset($_GET['dataset']) ? sanitize_filename($_GET['dataset']) : 'dataFinal.csv';
@@ -32,7 +32,7 @@ $data = $processedData['data'];
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
     <!-- CSS externe -->
-    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="./../styles/style.css">
 </head>
 <body>
     <div class="container">
@@ -249,6 +249,6 @@ $data = $processedData['data'];
     </script>
     
     <!-- Script externe -->
-    <script src="../scripts/script.js"></script>
+    <script src="./../scripts/script.js"></script>
 </body>
 </html>
