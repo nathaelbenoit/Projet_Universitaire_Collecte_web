@@ -1,8 +1,4 @@
 <?php
-/**
- * Dashboard d'analyse météorologique
- * Génère 4 indicateurs visuels à partir des données collectées
- */
 
 // Augmenter la limite de mémoire pour les gros fichiers
 ini_set('memory_limit', '512M');

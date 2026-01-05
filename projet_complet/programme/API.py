@@ -9,24 +9,52 @@ import math
 POITIERS_LAT = 46.580224
 POITIERS_LON = 0.340375
 
-url_base = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/donnees-synop-essentielles-omm/records"
+url_de_base = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/donnees-synop-essentielles-omm/records"
 
 def obtenirComptageEntreDates(date_debut, date_fin):
-    params = {
+    """
+    Obtient le nombre total d'enregistrements disponibles dans l'API pour une période donnée.
+    
+    Cette fonction effectue une requête à l'API OpenDataSoft pour compter le nombre d'enregistrements
+    météorologiques SYNOP disponibles entre deux dates, sans récupérer les données elles-mêmes.
+    Cela permet de vérifier la quantité de données avant de les télécharger et d'adapter la stratégie
+    de pagination en fonction du volume.
+    
+    Paramètres d'entrée:
+        date_debut (str): Date de début au format ISO 8601 (ex: '2025-01-01T00:00:00Z')
+        date_fin (str): Date de fin au format ISO 8601 (ex: '2025-01-31T00:00:00Z')
+    
+    Paramètres de sortie:
+        int: Nombre total d'enregistrements disponibles pour la période spécifiée.
+             Retourne 0 en cas d'erreur ou si aucune donnée n'est disponible.
+    """
+    parametres = {
         "limit": 0,
         "where": f"date >= '{date_debut}' AND date < '{date_fin}'"
     }
-    response = requests.get(url_base, params=params)
-    if response.status_code != 200:
+    reponse = requests.get(url_de_base, params=parametres)
+    if reponse.status_code != 200:
         print("Erreur API lors du comptage")
         return 0
-    data = response.json()
-    return data.get("total_count", 0)
+    donnees_api = reponse.json()
+    return donnees_api.get("total_count", 0)
 
 def recupererDonneesEntreDates(date_debut, date_fin):
     """
-    Récupère les données de l'API avec pagination
-    L'API limite à 100 résultats par requête, donc on utilise offset
+    Récupère toutes les données météorologiques disponibles dans l'API pour une période donnée.
+    
+    Cette fonction gère la pagination automatique de l'API OpenDataSoft qui limite chaque requête
+    à 100 résultats maximum. Elle effectue des requêtes successives avec un offset croissant
+    jusqu'à récupérer l'intégralité des données de la période spécifiée.
+    
+    Paramètres d'entrée:
+        date_debut (str): Date de début au format ISO 8601 (ex: '2025-01-01T00:00:00Z')
+        date_fin (str): Date de fin au format ISO 8601 (ex: '2025-01-31T00:00:00Z')
+    
+    Paramètres de sortie:
+        list: Liste de dictionnaires contenant les enregistrements météorologiques bruts.
+              Chaque dictionnaire représente une observation SYNOP avec tous ses champs.
+              Retourne une liste vide en cas d'erreur ou si aucune donnée n'est disponible.
     """
     resultats = []
     decalage = 0      # offset: nombre d'enregistrements à ignorer
@@ -34,7 +62,7 @@ def recupererDonneesEntreDates(date_debut, date_fin):
     
     while True:
         # Paramètres de la requête API
-        params = {
+        parametres = {
             "limit": limite,   # Limite à 100 résultats
             "offset": decalage, # Commence à "decalage" résultats
             # Filtre WHERE: récupère les données entre deux dates
@@ -42,16 +70,16 @@ def recupererDonneesEntreDates(date_debut, date_fin):
         }
         
         # Effectue la requête HTTP GET
-        response = requests.get(url_base, params=params)
+        reponse = requests.get(url_de_base, params=parametres)
         
         # Vérifie que la requête a réussi (code 200)
-        if response.status_code != 200:
+        if reponse.status_code != 200:
             print(f"Erreur API pour {date_debut} - {date_fin}, décalage {decalage}")
             break
         
         # Extrait les résultats de la réponse JSON
         # .get("results", []) retourne la clé "results" ou [] si absent
-        lot = response.json().get("results", [])
+        lot = reponse.json().get("results", [])
         
         if not lot:  # Si aucun résultat, on arrête la boucle
             break
@@ -66,6 +94,26 @@ def recupererDonneesEntreDates(date_debut, date_fin):
     return resultats
 
 def traiterDonnees(donnees):
+    """
+    Transforme, nettoie et filtre les données météorologiques brutes récupérées de l'API.
+    
+    Cette fonction effectue plusieurs opérations de traitement sur les données:
+    - Normalise les données JSON en DataFrame pandas
+    - Renomme toutes les colonnes avec des noms descriptifs en français
+    - Supprime les colonnes entièrement vides (sans aucune valeur)
+    - Élimine les colonnes jugées non pertinentes pour l'analyse finale
+    
+    Le traitement permet d'obtenir un jeu de données propre et exploitable, avec uniquement
+    les variables météorologiques essentielles dans un format lisible.
+    
+    Paramètres d'entrée:
+        donnees (list): Liste de dictionnaires contenant les enregistrements bruts de l'API.
+                        Chaque dictionnaire représente une observation météorologique SYNOP.
+    
+    Paramètres de sortie:
+        pandas.DataFrame: DataFrame nettoyé contenant les données météorologiques traitées,
+                          avec colonnes renommées en français et données non pertinentes supprimées.
+    """
     df = pd.json_normalize(donnees)
 
     dictionnaire_renommage = {
@@ -227,8 +275,27 @@ def traiterDonnees(donnees):
     return df_propre
 
 
-def haversine_km(lat1, lon1, lat2, lon2):
-    """Calcule la distance en kilomètres entre deux points géographiques."""
+def calculer_distance_km(lat1, lon1, lat2, lon2):
+    """
+    Calcule la distance orthodromique (plus court chemin) entre deux points géographiques.
+    
+    Cette fonction utilise la formule de Haversine pour calculer la distance à la surface
+    d'une sphère entre deux points définis par leurs coordonnées GPS. La formule prend en
+    compte la courbure de la Terre et fournit une précision suffisante pour des distances
+    courtes et moyennes (quelques centaines de kilomètres).
+    
+    La formule de Haversine est: d = 2r × arcsin(√(sin²(Δφ/2) + cos(φ1) × cos(φ2) × sin²(Δλ/2)))
+    où φ représente la latitude, λ la longitude, et r le rayon terrestre.
+    
+    Paramètres d'entrée:
+        lat1 (float): Latitude du premier point en degrés décimaux (ex: 46.580224)
+        lon1 (float): Longitude du premier point en degrés décimaux (ex: 0.340375)
+        lat2 (float): Latitude du second point en degrés décimaux
+        lon2 (float): Longitude du second point en degrés décimaux
+    
+    Paramètres de sortie:
+        float: Distance entre les deux points en kilomètres.
+    """
     r = 6371.0  # Rayon terrestre en km
     
     # Convertit degrés en radians pour les calculs trigonométriques
@@ -248,6 +315,30 @@ def haversine_km(lat1, lon1, lat2, lon2):
     return r * c  # Distance en km
 
 def executerAvecDates(date_debut_str, date_fin_str):
+    """
+    Orchestre le processus complet de récupération, traitement et exportation des données météo.
+    
+    Cette fonction principale coordonne toutes les étapes du pipeline de collecte de données:
+    1. Récupération intelligente des données avec gestion dynamique des plages de dates
+       (ajuste automatiquement la taille des plages pour respecter les limites de l'API)
+    2. Traitement et nettoyage des données récupérées
+    3. Export des données en deux fichiers CSV:
+       - dataFinal.csv: toutes les données de la période
+       - dataPoitiers.csv: uniquement les stations dans un rayon de 100km autour de Poitiers
+    
+    La fonction utilise une stratégie de récupération adaptative: elle commence par des plages
+    de 30 jours et réduit progressivement la taille si le nombre d'enregistrements dépasse
+    la limite de l'API (10000). Cela permet d'optimiser le nombre de requêtes tout en
+    garantissant la récupération complète des données.
+    
+    Paramètres d'entrée:
+        date_debut_str (str): Date de début au format 'YYYY-MM-DD' (ex: '2025-01-01')
+        date_fin_str (str): Date de fin au format 'YYYY-MM-DD' (ex: '2025-01-31')
+    
+    Paramètres de sortie:
+        bool: True si l'exécution s'est terminée avec succès (données récupérées et exportées),
+              False en cas d'erreur ou si aucune donnée n'a été récupérée.
+    """
     try:
         # Convertit les strings en objets datetime
         date_debut = datetime.strptime(date_debut_str, "%Y-%m-%d")
@@ -307,21 +398,21 @@ def executerAvecDates(date_debut_str, date_fin_str):
         df_final = traiterDonnees(toutes_donnees)
         
         # Sauvegarder les CSV dans le même répertoire que ce script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(script_dir, 'dataFinal.csv')
+        repertoire_script = os.path.dirname(os.path.abspath(__file__))
+        chemin_csv = os.path.join(repertoire_script, 'dataFinal.csv')
         # to_csv() exporte le dataframe en CSV avec UTF-8
-        df_final.to_csv(csv_path, index=False, encoding='utf-8-sig')
+        df_final.to_csv(chemin_csv, index=False, encoding='utf-8-sig')
 
         # Générer un CSV pour les données situées dans un rayon de 100 km autour de Poitiers
         if {'Latitude', 'Longitude'}.issubset(df_final.columns):
             df_geo = df_final.dropna(subset=['Latitude', 'Longitude']).copy()
             df_geo['distance_km_poitiers'] = df_geo.apply(
-                lambda r: haversine_km(float(r['Latitude']), float(r['Longitude']), POITIERS_LAT, POITIERS_LON),
+                lambda r: calculer_distance_km(float(r['Latitude']), float(r['Longitude']), POITIERS_LAT, POITIERS_LON),
                 axis=1
             )
             df_poitiers = df_geo[df_geo['distance_km_poitiers'] <= 100]
-            poitiers_csv_path = os.path.join(script_dir, 'dataPoitiers.csv')
-            df_poitiers.to_csv(poitiers_csv_path, index=False, encoding='utf-8-sig')
+            chemin_csv_poitiers = os.path.join(repertoire_script, 'dataPoitiers.csv')
+            df_poitiers.to_csv(chemin_csv_poitiers, index=False, encoding='utf-8-sig')
         else:
             print("Colonnes Latitude/Longitude absentes : dataPoitiers.csv non généré", file=sys.stderr)
         

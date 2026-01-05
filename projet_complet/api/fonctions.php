@@ -1,7 +1,4 @@
 <?php
-/**
- * Fonctions PHP pour le dashboard météorologique
- */
 
 // Augmenter la limite de mémoire pour les gros fichiers
 ini_set('memory_limit', '512M');
