@@ -37,38 +37,6 @@ header p {
     font-size: 1.1em;
 }
 
-.nav-buttons {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 15px;
-    flex-wrap: wrap;
-}
-
-.nav-buttons a {
-    display: inline-block;
-    padding: 12px 30px;
-    background: linear-gradient(135deg, #1E90FF 0%, #4169E1 100%);
-    color: white;
-    text-decoration: none;
-    border-radius: 25px;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(30, 144, 255, 0.3);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.nav-buttons a:hover {
-    background: linear-gradient(135deg, #4169E1 0%, #1E90FF 100%);
-    box-shadow: 0 6px 12px rgba(30, 144, 255, 0.5);
-    transform: translateY(-2px);
-}
-
-.nav-buttons a:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(30, 144, 255, 0.3);
-}
-
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));

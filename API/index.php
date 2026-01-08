@@ -1,10 +1,9 @@
 <?php
-
 // Augmenter la limite de mémoire pour les gros fichiers
 ini_set('memory_limit', '512M');
 
 // Inclure les fonctions PHP
-require_once './fonctions.php';
+require_once './php/fonctions.php';
 
 // Charger les données (par défaut dataFinal.csv)
 $currentFile = isset($_GET['dataset']) ? sanitize_filename($_GET['dataset']) : 'dataFinal.csv';
@@ -28,17 +27,13 @@ $data = $processedData['data'];
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
     <!-- CSS externe -->
-    <link rel="stylesheet" href="./../styles/style.css">
+    <link rel="stylesheet" href="./styles/style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🌤️ Dashboard Météorologique</h1>
             <p>Projet universitaire collecte de données web - Analyse complète des données de stations météorologiques françaises </p>
-            <div class="nav-buttons">
-                <a href="#api">API</a>
-                <a href="./../index.php#web">Web Scraping</a>
-            </div>
         </header>
 
         <!-- Zone de sélection de période -->
@@ -245,6 +240,6 @@ $data = $processedData['data'];
     </script>
     
     <!-- Script externe -->
-    <script src="./../scripts/script.js"></script>
+    <script src="./scripts/script.js"></script>
 </body>
 </html>
