@@ -185,7 +185,8 @@ function getTemperatureColor(temp) {
     if (temp < 10) return '#00FF00';
     if (temp < 15) return '#90EE90';
     if (temp < 20) return '#FF6600';
-    return '#FF0000';
+    if (temp < 30) return '#FF0000';
+    return '#000000';
 }
 
 /**
